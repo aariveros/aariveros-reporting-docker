@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+   mssql:
+     image: microsoft/mssql-server-linux:latest
+     volumes:
+       - mssql_data:/var/opt/mssql
+     restart: always
+     environment:
+       SA_PASSWORD: mssqlpassword
+       ACCEPT_EULA: Y
+     ports:
+       - "1433:1433"
+
+   api:
+     depends_on:
+       - mssql
+     links:
+       - mssql
+     image: aariveros-reporting-api
+     build:
+       context: ./api
+     restart: always
+     environment:
+       MSSQL_DB_HOST: mssql
+       MSSQL_DB_PORT: 1433
+       MSSQL_DB_USER: sa
+       MSSQL_DB_PASSWORD: mssqlpassword
+       MSSQL_DB_DATABASE: reporting_db
+     ports:
+       - "5000:5000"
+
+   web:
+     image: aariveros-reporting-web
+     build:
+       context: ./web
+     ports:
+        - "7800:7800"
+     restart: always
+
+volumes:
+    mssql_data:
